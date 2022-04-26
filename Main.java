@@ -7,6 +7,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
+import java.awt.event.WindowEvent;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -18,7 +19,6 @@ import javax.swing.border.*;
 
 
 public class Main {
-	
 	
 	static JFrame frame = new JFrame();
 	static int frame_width = 650;
@@ -36,7 +36,7 @@ public class Main {
 	static int buttons_xOffset = (frame_width-(buttonWidth*10)-(buttonGap*10))/2;
 	static List<List<JTextField>> lines = new ArrayList();
 	static List<JButton> buttons = new ArrayList();
-	static String button_vals = "1234567890+-*/=E....";
+	static String button_vals = "1234567890+-*/=ED";
 	static int linesCompleted = 0;
 	static boolean[] buttonsGreen = new boolean[20];
 	static List<String> answers = new ArrayList();
@@ -53,6 +53,7 @@ public class Main {
 		frame.setBackground(background_color);
 		frame.setDefaultCloseOperation(3);
 		frame.setTitle("Nerdle");
+		
 		
 		//Text Fields
 		int currX = square_gap;
@@ -113,14 +114,30 @@ public class Main {
 		currY = buttons_yOffset;
 		for(int r = 0; r < 2; r++) {
 			for(int c = 0; c < 10; c++) {
+				
+				if(r == 1 && c > 6)
+					break;
+				
 				String l = button_vals.substring(i,i+1);
+				
 				JButton b = new JButton(l);
-				b.setBounds(currX, currY, buttonWidth, sqSize);
+				if(b.getText().equals("E")) {
+					b.setText("Enter");
+					b.setBounds(currX, currY, (buttonWidth+buttonGap)*2, sqSize);
+				}
+				else if(b.getText().equals("D")) {
+					b.setText("Delete");
+					b.setBounds(currX+buttonWidth+buttonGap*2, currY, buttonWidth*2+buttonGap, sqSize);
+				}
+				else {
+					b.setBounds(currX, currY, buttonWidth, sqSize);
+				}
+				
 				b.setBackground(Color.gray.brighter());
 				b.setBorder(new RoundBtn(10));
 				b.addActionListener(new ActionListener() {
 					public void actionPerformed(ActionEvent e) {
-						if(b.getText().equals("E") == false && b.getText().equals("B") == false) {
+						if(b.getText().equals("Enter") == false && b.getText().equals("Delete") == false) {
 							boolean found = false;
 							for(List<JTextField> line: lines) {
 								for(JTextField tf: line) {
@@ -136,7 +153,7 @@ public class Main {
 									break;
 							}
 						}
-						else {
+						else if(b.getText().equals("Enter")){
 							List<JTextField> line = lines.get(linesCompleted);
 							String eq = "";
 							for(JTextField tf: line) {
@@ -203,7 +220,24 @@ public class Main {
 								
 								}
 							}
+							//INVALID EQUATION
+							else {
+								JLabel inVLabel = new JLabel("Invalid Input");
+								inVLabel.setHorizontalAlignment(SwingConstants.CENTER);
+								JOptionPane.showMessageDialog(frame, inVLabel, "Invalid", JOptionPane.PLAIN_MESSAGE, null);
+							}
 								
+						}
+						//DELETE
+						else if(b.getText().equals("Delete")) {
+							List<JTextField> line = lines.get(linesCompleted);
+							for(int i = line.size()-1; i >= 0; i--) {
+								JTextField curr = line.get(i);
+								if(curr.getText().equals("") == false) {
+									curr.setText("");
+									break;
+								}
+							}
 						}
 					}
 				});
@@ -214,7 +248,7 @@ public class Main {
 				currX += buttonWidth+buttonGap;
 				i++;
 			}
-			currX = buttons_xOffset;
+			currX = buttons_xOffset+buttonWidth/2;
 			currY += (buttonGap+sqSize);
 		}
 		
@@ -222,7 +256,6 @@ public class Main {
 		
 		
 		for(List<JTextField> tfl: lines) {
-			//tf.setOpaque(true);
 			for(JTextField tf: tfl) {
 				frame.add(tf);
 			}
@@ -269,6 +302,9 @@ public class Main {
 		}
 		if(n==JOptionPane.YES_OPTION)
 			newGame();
+		else {
+			frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING));
+		}
 	}
 	
 	
@@ -428,20 +464,6 @@ public class Main {
 				return Integer.valueOf(eq);
 			}
 			
-			// [5,3,2]
-			// [+,*]
-			//Pri index = 1
-			//Pri Op = '*'
-			
-			// [5,6]
-			// [+]
-			//Pri index = 0
-			//Pri Op = '+'
-			
-			// [11]
-			// []
-			//Pri index = -1
-			//Pri Op = ""
 			
 			int a = Integer.valueOf(nums.get(priority_index));
 			int b = Integer.valueOf(nums.get(priority_index+1));
@@ -517,4 +539,5 @@ class RoundBtn implements Border
         g.drawRoundRect(x, y, width-1, height-1, r, r);
     }
 }
+
 
